@@ -1,0 +1,11 @@
+{
+  "name": "Club Demo",
+  "color": "#b3121b",
+  "instagram_token": "",
+  "spotify_playlist_id": "37i9dQZF1DXcBWIGoYBM5M",
+  "events": [
+    { "date": "2026-10-17", "title": "Opening Night (exemple)", "artists": ["DJ Nova", "Kaito"], "ticket": "https://example.com" },
+    { "date": "2026-10-24", "title": "Latino Night (exemple)", "artists": ["Mira", "DJ Sol"], "ticket": "https://example.com" },
+    { "date": "2026-10-31", "title": "Halloween Party (exemple)", "artists": ["Kaito", "Zeno"], "ticket": "https://example.com" }
+  ]
+}
