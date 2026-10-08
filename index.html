@@ -66,6 +66,9 @@
   nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;border-radius:20px;color:var(--mute);padding:9px 2px 8px;font:500 .68rem var(--body);cursor:pointer}
   nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   nav button.on{color:#fff;background:var(--accent)}
+  .foot{text-align:center;font-size:.75rem;color:var(--mute);margin:8px 18px 0}
+  #lock{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:28px;text-align:center;background:rgba(12,7,9,.96)}
+  #lock[hidden]{display:none}
   button:focus-visible,a:focus-visible{outline:2px solid var(--accent-fg);outline-offset:2px}
   @media (prefers-reduced-motion:no-preference){.card{animation:up .45s ease both}.card:nth-of-type(2){animation-delay:.07s}.card:nth-of-type(3){animation-delay:.14s}.card:nth-of-type(4){animation-delay:.21s}
     @keyframes up{from{opacity:0;transform:translateY(14px)}}}
@@ -97,6 +100,9 @@
 <section id="videos"></section>
 <section id="news"></section>
 <section id="playlist"></section>
+
+<p class="foot">Démo · <a href="admin.html">Espace gérant (démo)</a></p>
+<div id="lock" hidden><div><h2 style="margin:0">Application suspendue</h2><p>L'abonnement du club est inactif (simulation). Les soirées reviennent dès que le gérant réactive son abonnement.</p></div></div>
 
 <nav>
   <button data-t="events" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Soirées</button>
@@ -142,6 +148,10 @@ const eventCard = (e, i) => {
 
 async function load() {
   const c = await (await fetch('club.json', {cache: 'no-store'})).json();
+  // Démo : l'espace gérant (admin.html) enregistre ses changements dans ce navigateur
+  let sub = 'on';
+  try { const o = JSON.parse(localStorage.getItem('club_demo') || 'null'); if (o) { sub = o.sub || 'on'; Object.assign(c, o.data || {}); } } catch {}
+  $('lock').hidden = sub !== 'off';
   document.title = $('name').textContent = c.name;
   document.documentElement.style.setProperty('--accent', c.color);
 

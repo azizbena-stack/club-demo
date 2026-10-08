@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;700&display=swap">
+<title>Espace gérant</title>
+<style>
+  /* Même direction que l'application : noir chaud, rouge du club, capitales condensées. Tableau de bord sobre. */
+  :root{color-scheme:dark;--bg:#0c0709;--card:#170f13;--line:#2b1d23;--fg:#f6eff1;--mute:#a8969c;--accent:#b3121b;--accent-fg:#ff5a62;--ok:#4cc38a;
+        --display:'Anton','Impact','Arial Narrow',sans-serif;--body:'DM Sans',system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.45 var(--body);background:var(--bg);color:var(--fg);padding:0 18px 40px}
+  main{max-width:640px;margin:0 auto}
+  .demo{margin:0 -18px 18px;padding:8px 18px;text-align:center;font-size:.8rem;font-weight:700;letter-spacing:.06em;background:#3a2a05;color:#ffd479}
+  h1{margin:6px 0 2px;font:400 2rem/1 var(--display);letter-spacing:.04em;text-transform:uppercase}
+  h2{margin:0 0 12px;font:400 1.3rem/1 var(--display);letter-spacing:.04em;text-transform:uppercase}
+  .mute{color:var(--mute);font-size:.85rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:16px}
+  label{display:block;margin:12px 0 4px;font-size:.8rem;color:var(--mute)}
+  input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0f0a0c;color:var(--fg);font:inherit}
+  input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent-fg);outline-offset:2px}
+  button,.btn{display:inline-block;margin-top:14px;padding:11px 20px;border:0;border-radius:999px;background:var(--accent);color:#fff;font:700 .9rem var(--body);text-decoration:none;cursor:pointer}
+  button.ghost,.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+  .row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:0}
+  .row b{display:block}
+  .row button{margin:0;padding:7px 14px;font-size:.8rem}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700}
+  .pill.on{background:#12382a;color:var(--ok)} .pill.off{background:#3b1216;color:var(--accent-fg)}
+  .price{font:400 2.4rem/1 var(--display)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<main>
+  <p class="demo">MODE DÉMO · aucun paiement réel, les changements restent dans ce navigateur</p>
+  <h1>Espace gérant</h1>
+  <p class="mute" id="club">Club Demo</p>
+
+  <div class="card">
+    <h2>Abonnement</h2>
+    <p style="margin:0"><span class="price">29 €</span> <span class="mute">/ mois · exemple de tarif</span></p>
+    <p style="margin:8px 0 0">Statut : <span id="subpill" class="pill on">Actif</span></p>
+    <p class="mute" style="margin:8px 0 0">Les clients de ton club utilisent l'application gratuitement. Seul le gérant s'abonne.</p>
+    <div class="actions">
+      <button id="subtoggle" type="button">Simuler un impayé</button>
+      <a class="btn ghost" href="index.html">Voir l'application des clients</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Ajouter une soirée</h2>
+    <form id="f">
+      <label for="d">Date</label><input id="d" type="date" required>
+      <label for="t">Nom de la soirée</label><input id="t" required placeholder="Ex. Soirée latino">
+      <label for="a">Artistes (séparés par une virgule)</label><input id="a" placeholder="DJ Nova, Kaito">
+      <label for="k">Lien de billetterie</label><input id="k" type="url" placeholder="https://…">
+      <button type="submit">Ajouter la soirée</button>
+    </form>
+  </div>
+
+  <div class="card"><h2>Soirées programmées</h2><div id="list"></div></div>
+
+  <div class="card">
+    <h2>Playlist Spotify</h2>
+    <label for="p">Identifiant de la playlist</label><input id="p">
+    <button id="psave" type="button">Enregistrer</button>
+  </div>
+
+  <p><button id="reset" class="ghost" type="button">Remettre la démo à zéro</button></p>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let base, st = {sub: 'on', data: {}};
+
+try { st = JSON.parse(localStorage.getItem('club_demo')) || st; } catch {}
+const save = () => { try { localStorage.setItem('club_demo', JSON.stringify(st)); } catch {} render(); };
+const cur = () => ({...base, ...st.data});
+
+function render() {
+  const c = cur();
+  $('club').textContent = c.name;
+  $('p').value = c.spotify_playlist_id;
+  const on = st.sub !== 'off';
+  $('subpill').textContent = on ? 'Actif' : 'Impayé (simulation)';
+  $('subpill').className = 'pill ' + (on ? 'on' : 'off');
+  $('subtoggle').textContent = on ? 'Simuler un impayé' : 'Réactiver l’abonnement';
+  const evs = [...c.events].sort((a, b) => a.date.localeCompare(b.date));
+  $('list').innerHTML = evs.map(e => `<div class="row"><div><b>${esc(e.title)}</b>
+    <span class="mute">${new Date(e.date + 'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})} · ${esc(e.artists.join(', '))}</span></div>
+    <button class="ghost" data-del="${esc(e.date + '|' + e.title)}" type="button">Supprimer</button></div>`).join('') || '<p class="mute">Aucune soirée.</p>';
+}
+
+$('f').onsubmit = e => {
+  e.preventDefault();
+  const ev = {date: $('d').value, title: $('t').value.trim(), artists: $('a').value.split(',').map(s => s.trim()).filter(Boolean), ticket: $('k').value || '#'};
+  st.data.events = [...cur().events, ev];
+  e.target.reset(); save();
+};
+$('list').onclick = e => {
+  const k = e.target.dataset.del; if (!k) return;
+  st.data.events = cur().events.filter(v => v.date + '|' + v.title !== k); save();
+};
+$('psave').onclick = () => { st.data.spotify_playlist_id = $('p').value.trim(); save(); };
+$('subtoggle').onclick = () => { st.sub = st.sub === 'off' ? 'on' : 'off'; save(); };
+$('reset').onclick = () => { st = {sub: 'on', data: {}}; try { localStorage.removeItem('club_demo'); } catch {} render(); };
+
+fetch('club.json', {cache: 'no-store'}).then(r => r.json()).then(j => { base = j; render(); });
+</script>
+</body>
+</html>
